@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User profile and goals",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "planStartDate": { "type": "string" },
+        "dailyCalorieGoal": { "type": "number" },
+        "dailyProteinGoal": { "type": "number" },
+        "dailyCarbGoal": { "type": "number" },
+        "dailyFatGoal": { "type": "number" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" }
+      },
+      "required": ["uid", "planStartDate", "dailyCalorieGoal", "dailyProteinGoal", "dailyCarbGoal", "dailyFatGoal"]
+    },
+    "LogEntry": {
+      "title": "LogEntry",
+      "description": "A food or workout log",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string", "enum": ["food", "workout"] },
+        "name": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "carbs": { "type": "number" },
+        "fat": { "type": "number" },
+        "duration": { "type": "number" },
+        "source": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "date", "type", "name", "calories", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/UserSettings" },
+      "description": "Store user settings and profile info"
+    },
+    "users/{userId}/logs/{logId}": {
+      "schema": { "$ref": "#/entities/LogEntry" },
+      "description": "Store individual food and workout logs"
+    }
+  }
+}

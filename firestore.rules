@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidUserSettings(data) {
+      return data.keys().hasAll(['uid', 'planStartDate', 'dailyCalorieGoal', 'dailyProteinGoal', 'dailyCarbGoal', 'dailyFatGoal']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.planStartDate is string && data.planStartDate.size() <= 50 &&
+             data.dailyCalorieGoal is number &&
+             data.dailyProteinGoal is number &&
+             data.dailyCarbGoal is number &&
+             data.dailyFatGoal is number &&
+             data.get('weight', 0) is number &&
+             data.get('height', 0) is number;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserSettings(incoming());
+      allow update: if isOwner(userId) && isValidUserSettings(incoming()) && incoming().uid == existing().uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['planStartDate', 'dailyCalorieGoal', 'dailyProteinGoal', 'dailyCarbGoal', 'dailyFatGoal', 'weight', 'height']);
+      allow delete: if false;
+      
+      match /logs/{logId} {
+        function isValidLog(data) {
+          return data.keys().hasAll(['userId', 'date', 'type', 'name', 'calories', 'timestamp']) &&
+                 data.userId is string && data.userId == request.auth.uid &&
+                 data.date is string && data.date.size() <= 20 &&
+                 data.type is string && (data.type == 'food' || data.type == 'workout' || data.type == 'activity_summary') &&
+                 data.name is string && data.name.size() > 0 && data.name.size() <= 250 &&
+                 data.calories is number &&
+                 data.timestamp is number &&
+                 data.get('protein', 0) is number &&
+                 data.get('carbs', 0) is number &&
+                 data.get('fat', 0) is number &&
+                 data.get('duration', 0) is number &&
+                 data.get('steps', 0) is number &&
+                 data.get('move', 0) is number &&
+                 data.get('activeCalories', 0) is number &&
+                 data.get('source', '') is string && data.get('source', '').size() <= 50;
+        }
+
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(logId) && isValidLog(incoming()) && incoming().get('createdAt', request.time) == request.time;
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(logId) && isValidLog(incoming()) && incoming().userId == existing().userId && incoming().get('createdAt', request.time) == existing().get('createdAt', request.time) &&
+          (incoming().diff(existing()).affectedKeys().hasOnly(['date', 'type', 'name', 'calories', 'timestamp', 'protein', 'carbs', 'fat', 'duration', 'source', 'steps', 'move', 'activeCalories']));
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

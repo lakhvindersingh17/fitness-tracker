@@ -1,0 +1,24 @@
+{
+  "name": "Fitness & Diet PWA",
+  "short_name": "FitnessPWA",
+  "name": "Fitness Tracker",
+  "description": "Offline-first Fitness and Diet Tracker with Apple Watch Sync and AI Food logging.",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/icon192/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/icon512/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
